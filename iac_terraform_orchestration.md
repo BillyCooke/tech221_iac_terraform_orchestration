@@ -54,3 +54,6 @@ resource "aws_instance" "app_instance" {
 5. Next run ```terraform apply``` to run the file
 6. This will launch an EC2 instance on AWS
 7. Destroy the instnace using ```terraform destroy```
+
+![VPC](https://github.com/BillyCooke/tech221_iac_terraform_orchestration/assets/129949090/e91a2b03-5767-4d7d-a703-7ff9b68e324f)
+
