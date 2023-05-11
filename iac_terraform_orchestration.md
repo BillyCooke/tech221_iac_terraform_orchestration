@@ -53,4 +53,4 @@ resource "aws_instance" "app_instance" {
 4. Then run ```terraform plan``` to preview the actions that terraform will take
 5. Next run ```terraform apply``` to run the file
 6. This will launch an EC2 instance on AWS
-7. Destroy the instnace using terraform destroy
+7. Destroy the instnace using ```terraform destroy```
