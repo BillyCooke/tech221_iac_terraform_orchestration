@@ -57,3 +57,146 @@ resource "aws_instance" "app_instance" {
 
 ![VPC](https://github.com/BillyCooke/tech221_iac_terraform_orchestration/assets/129949090/e91a2b03-5767-4d7d-a703-7ff9b68e324f)
 
+# Creating a VPC through Terraform
+1. Use ```nano main.tf``` to bring up your file and remove everything apart from the region section
+2. Next we need to add in the steps to create the VPC
+3. First we need to create a VPC, then an internet gateway, then a public subnet and lastly a route table.
+4. They all need to be in the same main.tf file but I have split them into each section
+
+## VPC
+
+```
+resource "aws_vpc" "my_vpc" {
+  cidr_block = 
+  instance_tenancy = "default"
+  tags = {
+    Name = "tech221_billy_vpc_iac"
+  }
+}
+```
+## Internet gateway
+
+```
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "tech221_billy_ig_iac"
+  }
+}
+```
+## Public and private subnets
+
+```
+resource "aws_subnet" "tech221_billy_publicsubnet_iac" {
+	vpc_id = aws_vpc.my_vpc.id
+	cidr_block = "10.0.2.0/24"
+	map_public_ip_on_launch = "true"
+	availability_zone = "eu-west-1"
+
+	tags = {
+		Name = "tech221_billy_publicsubnet_iac"
+	}
+
+}
+
+resource "aws_subnet" "tech221_billy_privatesubnet_iac" {
+	vpc_id = aws_vpc.my_vpc.id
+	cidr_block = 
+	availability_zone = "eu-west-1"
+
+	tags = {
+		Name = "tech221_billy_privatesubnet_iac"
+	}
+
+}
+```
+
+## Public and private route tables
+```
+resource "aws_route_table" "tech221_billy_publicRT" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.tech221_billy_ig_iac.id
+  }
+
+  tags = {
+    Name = "billy_publicRT"
+  }
+}
+
+resource "aws_route_table" "tech221_billy_privateRT" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "billy_privateRT"
+  }
+}
+```
+## Security group
+```
+resource "aws_security_group" "tech221_billy_sg_iac" {
+  name = "tech221_billy_sg_iac"
+  description = "app security group
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    description = "HTTP"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description = "port3000"
+    from_port = 3000
+    to_port = 3000
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+    egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"] # add your IP
+    ipv6_cidr_blocks = ["::/0"]
+    }
+
+    tags = {
+      Name = "tech221_billy_sg_iac"
+
+    }
+}
+```
+## Launch the app
+
+resource "aws_instance" "app_instance"{
+	# which ami to use
+	ami = ami-0a05bfcea61ce988f
+	
+	#type of instance
+	instance_type = "t2.micro"
+
+	# do you need the public IP
+	associate_public_ip_address = true
+
+	# Which subnet
+
+	subnet_id = "${aws_subnet.tech221_billy_publicsubnet_iac.id}"
+
+        # Add security groups
+
+	security_groups = ["${aws_security_group.tech221_billy_sg_iac.id}"]
+
+	# what would you like to name it
+	tags = {
+	
+	  Name = "tech221_billy_app_terraform"
+
+	} 
+
+}
